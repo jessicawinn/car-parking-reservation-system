@@ -68,7 +68,7 @@
 
           <ul class="menu-inner py-1 mt-3">
             <!-- Apps -->
-            <li class="menu-item ">
+            <li class="menu-item active">
               <a
                 href="dashboard.html"
                 class="menu-link">
@@ -99,7 +99,7 @@
             </li>
             
 
-            <li class="menu-item active mt-3">
+            <li class="menu-item mt-3">
               <a
               href="customers.html"
               
@@ -232,36 +232,41 @@
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <!-- Content -->
-
             <div class="container-xxl flex-grow-1 container-p-y">
-              <div class="row">
-                <div class="col-lg-12 mb-4 order-0">
-                  <div class="card">
-                    <div class="card-body">
-                      <h3 class="mb-5">Customers</h3>
-                      <div class="table-responsive">
-
-                      <table class="table table-responsive table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Phone</th>
-                                <th>Email</th>
-                                <th>Vehicle Info</th>
-                                <th>Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body">
-                          <!-- Table body will be populated dynamically -->
-                      </tbody>
-                      </table>
-                      </div>  
+                <div class="row">
+                  <div class="col-lg-12 mb-4 order-0">
+                    <div class="card">
+                      <div class="card-body">
+                        <h3 class="mb-5">Dashboard</h3>
+                        <div class="container">
+                          <!-- Today's revenue chart -->
+                          <canvas id="revenueChart" width="400" height="200"></canvas>
+                          <!-- Today's revenue and total parking spots boxes -->
+                          <div class="row mt-4">
+                            <div class="col-lg-6 mb-4">
+                              <div class="card">
+                                <div class="card-body">
+                                  <h5 class="card-title">Today's Revenue</h5>
+                                  <p class="card-text">$1500</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="col-lg-6 mb-4">
+                              <div class="card">
+                                <div class="card-body">
+                                  <h5 class="card-title">Today's Total Parking Spots</h5>
+                                  <p class="card-text">100</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <!-- / Today's revenue and total parking spots boxes -->
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
             <!-- / Content -->
 
 
@@ -302,5 +307,37 @@
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 
     <script src="customer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script>
+        // Week's revenue data
+        const weekRevenue = [5000, 7000, 6000, 8000, 9000, 7500, 6500];
+
+        // Revenue chart data
+        const revenueData = {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            datasets: [{
+                label: 'Week Revenue',
+                data: weekRevenue,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Render the revenue chart
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: revenueData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
   </body>
 </html>
