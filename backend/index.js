@@ -145,15 +145,45 @@ app.post('/staff', async (req, res) => {
 
 
 // delete staff by id
-app.delete('/staff/:id', async(req, res) => {
+app.delete('/staff/:id', async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+
+        // Get the building ID associated with the staff member being deleted
+        const buildingIdResult = await pool.query(
+            "SELECT building_id FROM staff WHERE staff_id = $1", [id]
+        );
+
+        if (buildingIdResult.rows.length === 0) {
+            return res.status(404).json({ error: "Staff member not found." });
+        }
+
+        const buildingId = buildingIdResult.rows[0].building_id;
+
+        // Check how many staff members are working in the building
+        const checkTotalStaffWorking = await pool.query(`
+            SELECT COUNT(*) AS num_staff_in_building
+            FROM staff
+            WHERE building_id = $1`, [buildingId]
+        );
+
+        const numStaffInBuilding = checkTotalStaffWorking.rows[0].num_staff_in_building;
+
+        if (numStaffInBuilding === 1) {
+            // If there is only one staff member in the building, send a warning response
+            return res.status(400).json({ error: "There is only one staff in this building. Cannot delete the last staff." });
+        }
+
+        // If there are more than one staff member in the building, proceed with deletion
         const deleteStaff = await pool.query("DELETE FROM staff WHERE staff_id = $1", [id]);
-        res.json("Staff delected successfully");
+        return res.json("Staff deleted successfully");
     } catch (error) {
         console.log(error.message);
+        res.status(500).json({ error: "An error occurred while deleting staff." });
     }
 });
+
+
 
 
 // update staff by id
@@ -224,7 +254,7 @@ app.post('/building', async (req, res) => {
         // Check if building name already exists
         const buildingName = await pool.query("SELECT * FROM building WHERE building_name = $1", [building_name]);
         if (buildingName.rows.length > 0) {
-            return res.status(400).json({ error: "Building already exists." });
+            return res.status(400).json({ error: "Building name already exists." });
         }
 
         // Add new building 

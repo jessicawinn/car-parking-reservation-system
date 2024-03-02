@@ -1,0 +1,65 @@
+const form = document.getElementById('buildingForm');
+form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(form);
+    const formDataObject = {};
+    formData.forEach((value, key) => {
+        formDataObject[key] = value;
+    });
+
+    try {
+        const buildingData = {
+            building_name: formDataObject['building_name'],
+            building_address: formDataObject['building_address'],
+            building_capacity: formDataObject['building_capacity']
+        };
+
+        // Perform a POST request to create a new building
+        const buildingResponse = await fetch('http://localhost:5001/building', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(buildingData)
+        });
+
+        if (!buildingResponse.ok) {
+            throw new Error('Failed to create new building.');
+        }
+
+        const buildingResponseBody = await buildingResponse.json();
+        console.log(buildingResponseBody.message);
+
+        // If building creation is successful, proceed to create the new staff member
+        const staffData = {
+            staff_first_name: formDataObject['staff_first_name'],
+            staff_last_name: formDataObject['staff_last_name'],
+            staff_email: formDataObject['staff_email'],
+            staff_password: formDataObject['staff_password'],
+            staff_phone_number: formDataObject['staff_phone_number'],
+            staff_address: formDataObject['staff_address'],
+            building_name: formDataObject['building_name'] // Use the same building name for staff creation
+        };
+
+        // Perform a POST request to create a new staff member
+        const staffResponse = await fetch('http://localhost:5001/staff', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(staffData)
+        });
+
+        if (!staffResponse.ok) {
+            throw new Error('Failed to create new staff member.');
+        }
+
+        const staffResponseBody = await staffResponse.json();
+        console.log(staffResponseBody.message);
+
+        window.location.href = 'building.html'; // Redirect to building page after successful creation
+    } catch (error) {
+        console.error('Error creating new building or staff member:', error.message);
+    }
+});

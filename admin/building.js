@@ -95,6 +95,9 @@
 //     }
 // });
 
+
+
+
 // Fetch building data and render it
 fetch('http://localhost:5001/building')
     .then(response => response.json())
@@ -180,6 +183,43 @@ if (buildingId && window.location.pathname.includes('edit_building.html')) {
 
 
 // Form submission logic for adding/editing building
+// const form = document.getElementById('buildingForm');
+// form.addEventListener('submit', async (event) => {
+//     event.preventDefault();
+
+//     const formData = new FormData(form);
+//     const formDataObject = {};
+//     formData.forEach((value, key) => {
+//         formDataObject[key] = value;
+//     });
+
+//     try {
+//         const url = buildingId ? `http://localhost:5001/building/${buildingId}` : 'http://localhost:5001/building';
+//         const method = buildingId ? 'PUT' : 'POST';
+
+//         const response = await fetch(url, {
+//             method: method,
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify(formDataObject)
+//         });
+
+//         if (!response.ok) {
+//             throw new Error('Failed to add/update building.');
+//         }
+
+//         const responseData = await response.json();
+//         console.log(responseData.message);
+
+//         window.location.href = 'building.html';
+//     } catch (error) {
+//         console.error('Error adding/updating building:', error.message);
+//     }
+// });
+
+
+// Form submission logic for adding/editing building
 const form = document.getElementById('buildingForm');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -191,8 +231,14 @@ form.addEventListener('submit', async (event) => {
     });
 
     try {
-        const url = buildingId ? `http://localhost:5001/building/${buildingId}` : 'http://localhost:5001/building';
-        const method = buildingId ? 'PUT' : 'POST';
+        const buildingId = urlParams.get('id'); // Get the building ID from the form data
+
+        if (!buildingId) {
+            throw new Error('Building ID is required for updating a building.');
+        }
+
+        const url = `http://localhost:5001/building/${buildingId}`;
+        const method = 'PUT';
 
         const response = await fetch(url, {
             method: method,
@@ -203,7 +249,7 @@ form.addEventListener('submit', async (event) => {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to add/update building.');
+            throw new Error('Failed to update building.');
         }
 
         const responseData = await response.json();
@@ -211,6 +257,6 @@ form.addEventListener('submit', async (event) => {
 
         window.location.href = 'building.html';
     } catch (error) {
-        console.error('Error adding/updating building:', error.message);
+        console.error('Error updating building:', error.message);
     }
 });
