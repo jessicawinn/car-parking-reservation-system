@@ -173,7 +173,7 @@ app.delete('/staff/:id', async (req, res) => {
         console.log(numStaffInBuilding === 1);
         if (parseInt(numStaffInBuilding) === 1) {
             // If there is only one staff member in the building, send a warning response
-            return res.status(400).json({ error: "There is only one staff in this building. Cannot delete the last staff." });
+            return res.status(404).json({ error: "There is only one staff in this building. Cannot delete the last staff." });
         } else {
             // If there are more than one staff member in the building, proceed with deletion
             const deleteStaff = await pool.query("DELETE FROM staff WHERE staff_id = $1", [id]);
@@ -247,6 +247,17 @@ app.put('/staff/:id', async (req, res) => {
             return res.status(404).json({ error: "Building not found." });
         } 
         const building_id = buildingResult.rows[0].building_id;
+
+        //checking if last staff in the building
+        const buildingIdQueryResult = await pool.query("SELECT building_id FROM staff WHERE staff_id = $1", [id]);
+        const buildingId = buildingIdQueryResult.rows[0].building_id;
+        
+        const numStaffInBuildingResult = await pool.query("SELECT COUNT(*) AS num_staff_in_building FROM staff WHERE building_id = $1", [buildingId]);
+        const numStaffInBuilding = numStaffInBuildingResult.rows[0].num_staff_in_building;
+        
+        if (parseInt(numStaffInBuilding) === 1) {
+            return res.status(404).json({ error: "There is only one staff in this building. Cannot update the last staff." });
+        }
 
         // Updating staff
         const updateQuery = "UPDATE staff SET staff_first_name = $1, staff_last_name = $2, staff_ph_no= $3, staff_address = $4, staff_email = $5, staff_password = $6, building_id = $7 WHERE staff_id = $8";

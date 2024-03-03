@@ -18,18 +18,26 @@ async function deleteStaff(id) {
             method: 'DELETE'
         });
         if (!response.ok) {
-            alert(data.error);
-            alert("there is only one staff left in that building");
-            // throw new Error('Failed to delete staff');
-        }   
-        console.log('Staff deleted successfully');
-        return true; // Indicate successful deletion
+            const responseData = await response.json();
+            if (response.status === 404 && responseData.error === "There is only one staff in this building. Cannot delete the last staff.") {
+                alert("There is only one staff in this building. Cannot delete the last staff.");
+            } else {
+                alert('Failed to delete staff');
+            }
+            await populateStaffTable();
+            // You can add additional error handling here if needed
+        } else {
+            console.log('Staff deleted successfully');
+            await populateStaffTable(); // Refresh the staff table
+            return true; // Indicate successful deletion
+        }
     } catch (error) {
-        alert("there is only one staff left in that building");
         console.error('Error deleting staff:', error.message);
         throw error;
     }
 }
+
+
 
 
 
@@ -87,7 +95,7 @@ async function initializePage() {
                 if (confirm('Are you sure you want to delete this staff member?')) {
                     try {
                         await deleteStaff(staffId);
-                        await populateStaffTable(); // Refresh the table after deletion
+                        await initializePage(); // Refresh the table after deletion
                     } catch (error) {
                         console.error('Error deleting staff:', error.message);
                     }
@@ -181,8 +189,12 @@ async function editStaffInformation() {
                         });
 
                         if (!response.ok) {
-                            throw new Error('Failed to update staff member.');
-                        }
+                            const responseData = await response.json();
+                            if (response.status === 404 && responseData.error === "There is only one staff in this building. Cannot update the last staff.") {
+                                alert("There is only one staff in this building. Cannot update the last staff.");
+                            } else {
+                                alert('Failed to update staff');
+                            }                        }
 
                         const responseData = await response.json();
                         console.log(responseData.message); // Log success message
