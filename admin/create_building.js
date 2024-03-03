@@ -12,7 +12,8 @@ form.addEventListener('submit', async (event) => {
         const buildingData = {
             building_name: formDataObject['building_name'],
             building_address: formDataObject['building_address'],
-            building_capacity: formDataObject['building_capacity']
+            building_capacity: formDataObject['building_capacity'],
+            price_per_min : formDataObject['price_per_min']
         };
 
         // Perform a POST request to create a new building
@@ -37,7 +38,7 @@ form.addEventListener('submit', async (event) => {
             staff_last_name: formDataObject['staff_last_name'],
             staff_email: formDataObject['staff_email'],
             staff_password: formDataObject['staff_password'],
-            staff_phone_number: formDataObject['staff_phone_number'],
+            staff_ph_no: formDataObject['staff_ph_no'],
             staff_address: formDataObject['staff_address'],
             building_name: formDataObject['building_name'] // Use the same building name for staff creation
         };

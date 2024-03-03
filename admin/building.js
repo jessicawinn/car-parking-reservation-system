@@ -140,23 +140,51 @@ fetch('http://localhost:5001/building')
     })
     .catch(error => console.error('Error fetching building data:', error));
 
-// Function to delete a building
+// // Function to delete a building
+// async function deleteBuilding(id, cardDiv) {
+//     try {
+//         const response = await fetch(`http://localhost:5001/building/${id}`, {
+//             method: 'DELETE'
+//         });
+//         const data = await response.json();
+//         if (response.ok) {
+//             console.log(data);
+//             cardDiv.remove();
+//         } else {
+//             alert(data.error);
+//         }
+//     } catch (error) {
+//         console.error('Error deleting building:', error);
+//     }
+// }
+
+// Function to delete a building and its associated staff
 async function deleteBuilding(id, cardDiv) {
     try {
-        const response = await fetch(`http://localhost:5001/building/${id}`, {
+        // Show confirmation dialog
+        const confirmed = confirm("Are you sure you want to delete this building? This action will delete all associated staff members as well.");
+
+        if (!confirmed) {
+            return; // If not confirmed, do nothing
+        }
+
+        const response = await fetch(`http://localhost:5001/staff/building/${id}`, {
             method: 'DELETE'
         });
-        const data = await response.json();
+
         if (response.ok) {
-            console.log(data);
-            cardDiv.remove();
+            // If staff and building are deleted successfully
+            cardDiv.remove(); // Remove the building card from UI
+            alert("Building and associated staff deleted successfully.");
         } else {
-            alert(data.error);
+            const data = await response.json();
+            alert(data.error); // Show error message
         }
     } catch (error) {
         console.error('Error deleting building:', error);
     }
 }
+
 
 const urlParams = new URLSearchParams(window.location.search);
 const buildingId = urlParams.get('id');
@@ -174,6 +202,7 @@ if (buildingId && window.location.pathname.includes('edit_building.html')) {
                 document.getElementById('buildingName').value = building.building_name;
                 document.getElementById('buildingAddress').value = building.building_address;
                 document.getElementById('buildingCapacity').value = building.building_capacity;
+                document.getElementById('buildingPrice').value = building.price_per_min;
             } else {
                 console.error('Building not found or invalid response');
             }

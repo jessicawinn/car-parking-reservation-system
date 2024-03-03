@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = 5001;
 const cors = require("cors");
-const pool = require('./db');
+const pool = require('./db1');
 
 app.use(cors());
 app.use(express.json());
@@ -12,7 +12,7 @@ app.listen(port, () => {
 })
 
 // app.get("/", (req, res) => {
-//     res.send("hello world");
+//     res.send("hello world");x
 // })
 
 // get customer data
@@ -101,13 +101,13 @@ app.get('/staff/:id', async(req,res) => {
 // create staff
 app.post('/staff', async (req, res) => {
     try {
-        const { staff_first_name, staff_last_name, staff_phone_number, staff_address, staff_email, staff_password, building_name } = req.body;
+        const { staff_first_name, staff_last_name, staff_ph_no, staff_address, staff_email, staff_password, building_name } = req.body;
 
         // Logging: Print out the values of variables
         console.log("Received request body:", req.body);
         console.log("First Name:", staff_first_name);
         console.log("Last Name:", staff_last_name);
-        console.log("Phone:", staff_phone_number);
+        console.log("Phone:", staff_ph_no);
         console.log("Address:", staff_address);
         console.log("Email:", staff_email);
         console.log("Password:", staff_password);
@@ -132,8 +132,8 @@ app.post('/staff', async (req, res) => {
         const building_id = buildingResult.rows[0].building_id;
 
         // Insert new staff member
-        const insertQuery = "INSERT INTO staff (staff_first_name, staff_last_name, staff_phone_number, staff_address, staff_email, staff_password, building_id) VALUES ($1, $2, $3, $4, $5, $6, $7)";
-        const values = [staff_first_name, staff_last_name, staff_phone_number, staff_address, staff_email, staff_password, building_id];
+        const insertQuery = "INSERT INTO staff (staff_first_name, staff_last_name, staff_ph_no, staff_address, staff_email, staff_password, building_id) VALUES ($1, $2, $3, $4, $5, $6, $7)";
+        const values = [staff_first_name, staff_last_name, staff_ph_no, staff_address, staff_email, staff_password, building_id];
         await pool.query(insertQuery, values);
 
         res.status(201).json({ message: "Staff created successfully." });
@@ -168,15 +168,18 @@ app.delete('/staff/:id', async (req, res) => {
         );
 
         const numStaffInBuilding = checkTotalStaffWorking.rows[0].num_staff_in_building;
-
-        if (numStaffInBuilding === 1) {
+        console.log("Number of staff in building:", numStaffInBuilding);
+        console.log("Building ID:", buildingId);
+        console.log(numStaffInBuilding === 1);
+        if (parseInt(numStaffInBuilding) === 1) {
             // If there is only one staff member in the building, send a warning response
             return res.status(400).json({ error: "There is only one staff in this building. Cannot delete the last staff." });
+        } else {
+            // If there are more than one staff member in the building, proceed with deletion
+            const deleteStaff = await pool.query("DELETE FROM staff WHERE staff_id = $1", [id]);
+            return res.json("Staff deleted successfully");
         }
 
-        // If there are more than one staff member in the building, proceed with deletion
-        const deleteStaff = await pool.query("DELETE FROM staff WHERE staff_id = $1", [id]);
-        return res.json("Staff deleted successfully");
     } catch (error) {
         console.log(error.message);
         res.status(500).json({ error: "An error occurred while deleting staff." });
@@ -184,13 +187,45 @@ app.delete('/staff/:id', async (req, res) => {
 });
 
 
+// delete staff and building on building id
+app.delete('/staff/building/:buildingid', async (req, res) => {
+    try {
+        const { buildingid } = req.params;
+
+        // Get staff working in that building
+        const getStaff = await pool.query('SELECT staff_id FROM staff WHERE building_id = $1', [buildingid]);
+
+        // Check if there are staff members associated with the building
+        if (getStaff.rows.length === 0) {
+            // If no staff found, delete the building directly
+            await pool.query('DELETE FROM building WHERE building_id = $1', [buildingid]);
+            return res.json({ message: 'Building deleted successfully.' });
+        }
+
+        // Delete staff working in the building
+        await Promise.all(
+            getStaff.rows.map(async (staff) => {
+                await pool.query('DELETE FROM staff WHERE staff_id = $1', [staff.staff_id]);
+            })
+        );
+
+        // Delete the building
+        await pool.query('DELETE FROM building WHERE building_id = $1', [buildingid]);
+
+        res.json({ message: 'Staff and building deleted successfully.' });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ error: 'An error occurred while deleting staff and building.' });
+    }
+});
+
 
 
 // update staff by id
 app.put('/staff/:id', async (req, res) => {
     try {
         const {id} = req.params;
-        const { staff_first_name, staff_last_name, staff_phone_number, staff_address, staff_email, staff_password, building_name } = req.body;
+        const { staff_first_name, staff_last_name, staff_ph_no, staff_address, staff_email, staff_password, building_name } = req.body;
 
         // checking if staff exists
         const getStaffbyID = await pool.query("SELECT * FROM staff WHERE staff_id = $1", [id]);
@@ -214,8 +249,8 @@ app.put('/staff/:id', async (req, res) => {
         const building_id = buildingResult.rows[0].building_id;
 
         // Updating staff
-        const updateQuery = "UPDATE staff SET staff_first_name = $1, staff_last_name = $2, staff_phone_number= $3, staff_address = $4, staff_email = $5, staff_password = $6, building_id = $7 WHERE staff_id = $8";
-        const values = [staff_first_name, staff_last_name, staff_phone_number, staff_address, staff_email, staff_password, building_id, id];
+        const updateQuery = "UPDATE staff SET staff_first_name = $1, staff_last_name = $2, staff_ph_no= $3, staff_address = $4, staff_email = $5, staff_password = $6, building_id = $7 WHERE staff_id = $8";
+        const values = [staff_first_name, staff_last_name, staff_ph_no, staff_address, staff_email, staff_password, building_id, id];
         await pool.query(updateQuery, values);
         res.status(200).json({ message: "Staff updated successfully." });
     } catch (error) {
@@ -249,7 +284,7 @@ app.get('/building/:id', async (req, res) => {
 //adding new building
 app.post('/building', async (req, res) => {
     try {
-        const { building_name, building_address, building_capacity } = req.body;
+        const { building_name, building_address, building_capacity, price_per_min } = req.body;
 
         // Check if building name already exists
         const buildingName = await pool.query("SELECT * FROM building WHERE building_name = $1", [building_name]);
@@ -259,8 +294,8 @@ app.post('/building', async (req, res) => {
 
         // Add new building 
         const newBuilding = await pool.query(
-            "INSERT INTO building (building_name, building_address, building_capacity) VALUES ($1, $2, $3)",
-            [building_name, building_address, building_capacity]
+            "INSERT INTO building (building_name, building_address, building_capacity, price_per_min) VALUES ($1, $2, $3, $4)",
+            [building_name, building_address, building_capacity, price_per_min]
         );
         res.status(201).json({ message: "Building created successfully." });
     } catch (error) {
@@ -270,37 +305,54 @@ app.post('/building', async (req, res) => {
 });
 
 
-//deleting a selected building
-app.delete('/building/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
+// //deleting a selected building
+// app.delete('/building/:id', async (req, res) => {
+//     try {
+//         const { id } = req.params;
 
-        const checkStaff = await pool.query("SELECT * FROM staff WHERE staff.building_id = $1", [id]); 
-        console.log(checkStaff.rows.length);
-        if (checkStaff.rows.length > 0) {
-            return res.status(409).json({error: "There are staffs working in that building"});
-        }
+//         const checkStaff = await pool.query("SELECT * FROM staff WHERE staff.building_id = $1", [id]); 
+//         console.log(checkStaff.rows.length);
+//         if (checkStaff.rows.length > 0) {
+//             return res.status(409).json({error: "There are staffs working in that building"});
+//         }
 
-        // Check if any building was deleted
-        const deleteBuilding = await pool.query("DELETE FROM building WHERE building_id = $1", [id]);
-        if (deleteBuilding.rowCount === 0) {
-            return res.status(404).json({ error: "Building not found." });
-        }
+//         // Check if any building was deleted
+//         const deleteBuilding = await pool.query("DELETE FROM building WHERE building_id = $1", [id]);
+//         if (deleteBuilding.rowCount === 0) {
+//             return res.status(404).json({ error: "Building not found." });
+//         }
 
-        // Send success response
-        res.status(200).json({ message: "Building deleted successfully." });
-    } catch (error) {
-        console.error("Error deleting building:", error.message);
-        res.status(500).json({ error: "An error occurred while deleting building." });
-    }
-});
+//         // Send success response
+//         res.status(200).json({ message: "Building deleted successfully." });
+//     } catch (error) {
+//         console.error("Error deleting building:", error.message);
+//         res.status(500).json({ error: "An error occurred while deleting building." });
+//     }
+// });
+
+
+// delete staff and building on building id
+// app.delete('/building/:buildingid', async (req, res) => {
+//     try {
+//         const { buildingid } = req.params;
+
+//         // Delete the building
+//         await pool.query('DELETE FROM building WHERE building_id = $1', [buildingid]);
+
+//         res.json({ message: 'Building deleted successfully.' });
+//     } catch (error) {
+//         console.error(error.message);
+//         res.status(500).json({ error: 'An error occurred while deleting the building.' });
+//     }
+// });
+
 
 
 //updating a selected building
 app.put('/building/:id', async (req, res) => {
     try {
         const {id} = req.params;
-        const { building_name, building_address, building_capacity} = req.body;
+        const { building_name, building_address, building_capacity, price_per_min} = req.body;
 
         // Check if building name already exists
         const buildingName = await pool.query("SELECT * FROM building WHERE building_name = $1 AND building_id != $2", [building_name, id]);
@@ -310,8 +362,8 @@ app.put('/building/:id', async (req, res) => {
 
         // Upadting the building
         const updateBuilding = await pool.query(
-            "UPDATE building SET building_name = $1, building_address = $2, building_capacity = $3 WHERE building_id = $4",
-            [building_name, building_address, building_capacity, id]
+            "UPDATE building SET building_name = $1, building_address = $2, building_capacity = $3, price_per_min = $4 WHERE building_id = $5",
+            [building_name, building_address, building_capacity, price_per_min, id]
         );
     res.status(200).json({message : "Building updated sucessfully"});
     } catch (error) {

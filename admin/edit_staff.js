@@ -20,7 +20,7 @@ async function editStaffInformation() {
                     document.getElementById('staffLastName').value = staff.staff_last_name;
                     document.getElementById('staffEmail').value = staff.staff_email;
                     document.getElementById('staffPassword').value = staff.staff_password;
-                    document.getElementById('staffPhone').value = staff.staff_phone_number;
+                    document.getElementById('staffPhone').value = staff.staff_ph_no;
                     document.getElementById('staffAddress').value = staff.staff_address;
 
                     // Select the correct building in the dropdown

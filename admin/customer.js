@@ -27,15 +27,13 @@ fetch('http://localhost:5001/customer')
                         carDetails += '<br>';
                     }
                 });
-                const timestamp = new Date(customer.timestamp_column).toLocaleString();
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${customer.customer_id}</td>
                     <td>${customer.customer_first_name} ${customer.customer_last_name}</td>
-                    <td>${customer.customer_phone_number}</td>
+                    <td>${customer.customer_ph_no}</td>
                     <td>${customer.customer_email}</td>
                     <td>${carDetails}</td>
-                    <td>${timestamp}</td>
                 `;
                 tableBody.appendChild(row);
             });
